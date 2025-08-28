@@ -7,7 +7,7 @@ fs.readdir('./meus-arquivos', 'utf-8', (err, files) => {
   let extensions = {}
   files.forEach((fileName) => {
     let file = {
-      path: path.resolve(fileName),
+      path: path.resolve('./meus-arquivos', fileName),
       ext: path.extname(fileName)
     }
 
@@ -21,20 +21,26 @@ fs.readdir('./meus-arquivos', 'utf-8', (err, files) => {
   organizeFiles(extensions)
 })
 
-async function organizeFiles(extensions) {
-  const folderName = './meus-arquivos-organizados'
-  await createFolder(folderName)
+function organizeFiles(extensions) {
+  const folderName = path.resolve('./meus-arquivos-organizados')
+  createFolder(folderName)
   for (const ext in extensions) {
-    await createFolder(`${folderName}/${ext}`)
+    let destinationPath = `${folderName}/${ext.replace('.','')}`
+    createFolder(destinationPath)
+    copyFile(extensions[ext], destinationPath)
   }
 }
 
-async function createFolder(folderName) {
-  await fs.promises.mkdir(folderName, (err) => {
-    if (err){
-      console.log(`Não foi possível criar a pasta ${folderName}`)
-      throw err 
-    } 
-    console.log(`Pasta ${folderName} criada`)
+function copyFile(srcPathArr, destinationPath) {
+  srcPathArr.forEach((srcPath) => {
+    const fileName = path.basename(srcPath)
+    const finalPath = destinationPath+'/'+fileName
+    fs.copyFileSync(srcPath, finalPath)
   })
+}
+
+function createFolder(folderName) {
+  if(!fs.existsSync(folderName)){
+    fs.mkdirSync(folderName,{ recursive: true })
+  }
 }
