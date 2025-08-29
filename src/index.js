@@ -1,11 +1,13 @@
 import fs from 'fs'
 import path from 'path'
 
-const userFolder = process.argv[2]
-if (userFolder === undefined){
-  console.log('Por favor, informe a pasta de origem')
+const userSrcDir = process.argv[2]
+const userFinalDir = process.argv[3] || 'files'
+
+if (userSrcDir === undefined){
+  console.log('Por favor, informe a pasta de origem e destino')
 }else{
-  const srcPath = path.resolve(userFolder)
+  const srcPath = path.resolve(userSrcDir)
   fs.readdir(srcPath, 'utf-8', (err, files) => {
     if (err) throw err
     let extensions = {}
@@ -27,11 +29,12 @@ if (userFolder === undefined){
 }
 
 function organizeFiles(extensions) {
-  const folderName = path.resolve('./meus-arquivos-organizados')
-  createFolder(folderName)
+  const folderName = path.resolve(userFinalDir)
+  createDir(folderName)
   for (const ext in extensions) {
-    let destinationPath = `${folderName}/${ext.replace('.','')}`
-    createFolder(destinationPath)
+    let destinationPath = path.resolve(`${folderName}/${ext.replace('.','')}`)
+    createDir(destinationPath)
+    console.log(destinationPath, extensions[ext])
     copyFile(extensions[ext], destinationPath)
   }
 }
@@ -39,12 +42,12 @@ function organizeFiles(extensions) {
 function copyFile(srcPathArr, destinationPath) {
   srcPathArr.forEach((srcPath) => {
     const fileName = path.basename(srcPath)
-    const finalPath = destinationPath+'/'+fileName
+    const finalPath = path.resolve(destinationPath+'/'+fileName)
       fs.copyFileSync(srcPath, finalPath)
   })
 }
 
-function createFolder(folderName) {
+function createDir(folderName) {
   if(!fs.existsSync(folderName)){
     fs.mkdirSync(folderName,{ recursive: true })
   }
